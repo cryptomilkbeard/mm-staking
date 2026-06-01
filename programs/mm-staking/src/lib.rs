@@ -4,6 +4,7 @@ pub mod constants;
 pub mod errors;
 pub mod state;
 pub mod math;
+pub mod update;
 
 declare_id!("1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA");
 
