@@ -30,4 +30,12 @@ pub mod mm_staking {
     pub fn set_reward_active(ctx: Context<SetRewardActive>, slot: u8, active: bool) -> Result<()> {
         instructions::add_reward::set_active_handler(ctx, slot, active)
     }
+
+    pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
+        instructions::stake::stake_handler(ctx, amount)
+    }
+
+    pub fn unstake(ctx: Context<Unstake>, amount: u64) -> Result<()> {
+        instructions::stake::unstake_handler(ctx, amount)
+    }
 }
