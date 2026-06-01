@@ -20,6 +20,9 @@ init-if-needed = ["anchor-lang/init-if-needed"]
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
+# Required: anchor 0.31.1 `#[zero_copy]` derives `bytemuck::Pod`/`Zeroable` against the
+# `bytemuck` crate path directly, so it must be a direct dependency.
+bytemuck = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 # pure math unit tests need nothing extra
