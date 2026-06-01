@@ -1,0 +1,19 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+mm_staking = "1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "node --import tsx --test tests/**/*.test.ts"
