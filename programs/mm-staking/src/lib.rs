@@ -42,4 +42,8 @@ pub mod mm_staking {
     pub fn deposit_rewards(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
         instructions::deposit_rewards::handler(ctx, amount)
     }
+
+    pub fn claim<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Result<()> {
+        instructions::claim::handler(ctx)
+    }
 }

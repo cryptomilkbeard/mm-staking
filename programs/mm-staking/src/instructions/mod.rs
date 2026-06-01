@@ -9,3 +9,6 @@ pub use stake::*;
 
 pub mod deposit_rewards;
 pub use deposit_rewards::*;
+
+pub mod claim;
+pub use claim::*;
