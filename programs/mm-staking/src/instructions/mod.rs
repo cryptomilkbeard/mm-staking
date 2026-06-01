@@ -12,3 +12,6 @@ pub use deposit_rewards::*;
 
 pub mod claim;
 pub use claim::*;
+
+pub mod emergency_withdraw;
+pub use emergency_withdraw::*;

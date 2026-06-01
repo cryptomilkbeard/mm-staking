@@ -46,4 +46,8 @@ pub mod mm_staking {
     pub fn claim<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Result<()> {
         instructions::claim::handler(ctx)
     }
+
+    pub fn emergency_withdraw(ctx: Context<EmergencyWithdraw>) -> Result<()> {
+        instructions::emergency_withdraw::handler(ctx)
+    }
 }
