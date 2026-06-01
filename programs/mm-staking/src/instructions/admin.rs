@@ -7,7 +7,7 @@ use crate::state::Pool;
 pub struct AdminOnly<'info> {
     #[account(address = pool.load()?.admin @ StakingError::Unauthorized)]
     pub admin: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, seeds = [POOL_SEED, pool.load()?.stake_mint.as_ref()], bump = pool.load()?.bump)]
     pub pool: AccountLoader<'info, Pool>,
 }
 

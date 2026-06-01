@@ -55,7 +55,7 @@ pub fn handler(ctx: Context<AddReward>, duration: i64) -> Result<()> {
 pub struct SetRewardActive<'info> {
     #[account(address = pool.load()?.admin @ StakingError::Unauthorized)]
     pub admin: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, seeds = [POOL_SEED, pool.load()?.stake_mint.as_ref()], bump = pool.load()?.bump)]
     pub pool: AccountLoader<'info, Pool>,
 }
 
