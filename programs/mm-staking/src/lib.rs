@@ -22,4 +22,12 @@ pub mod mm_staking {
     ) -> Result<()> {
         instructions::initialize_pool::handler(ctx, default_duration, keeper_authority)
     }
+
+    pub fn add_reward(ctx: Context<AddReward>, duration: i64) -> Result<()> {
+        instructions::add_reward::handler(ctx, duration)
+    }
+
+    pub fn set_reward_active(ctx: Context<SetRewardActive>, slot: u8, active: bool) -> Result<()> {
+        instructions::add_reward::set_active_handler(ctx, slot, active)
+    }
 }
