@@ -20,6 +20,7 @@ init-if-needed = ["anchor-lang/init-if-needed"]
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
+bytemuck = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 # pure math unit tests need nothing extra

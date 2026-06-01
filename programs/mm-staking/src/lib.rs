@@ -1,21 +1,14 @@
-pub mod constants;
-pub mod error;
-pub mod instructions;
-pub mod state;
-
 use anchor_lang::prelude::*;
 
-pub use constants::*;
-pub use instructions::*;
-pub use state::*;
+pub mod constants;
+pub mod errors;
+pub mod state;
+pub mod math;
 
 declare_id!("1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA");
 
 #[program]
 pub mod mm_staking {
     use super::*;
-
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        initialize::handler(ctx)
-    }
+    // instruction handlers added in later tasks
 }
