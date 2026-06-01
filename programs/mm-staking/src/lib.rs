@@ -50,4 +50,17 @@ pub mod mm_staking {
     pub fn emergency_withdraw(ctx: Context<EmergencyWithdraw>) -> Result<()> {
         instructions::emergency_withdraw::handler(ctx)
     }
+
+    pub fn set_paused(ctx: Context<AdminOnly>, paused: bool) -> Result<()> {
+        instructions::admin::set_paused(ctx, paused)
+    }
+    pub fn set_keeper_authority(ctx: Context<AdminOnly>, keeper: Pubkey) -> Result<()> {
+        instructions::admin::set_keeper_authority(ctx, keeper)
+    }
+    pub fn set_admin(ctx: Context<AdminOnly>, new_admin: Pubkey) -> Result<()> {
+        instructions::admin::set_admin(ctx, new_admin)
+    }
+    pub fn set_duration(ctx: Context<AdminOnly>, slot: u8, duration: i64) -> Result<()> {
+        instructions::admin::set_duration(ctx, slot, duration)
+    }
 }
