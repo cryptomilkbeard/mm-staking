@@ -5,11 +5,21 @@ pub mod errors;
 pub mod state;
 pub mod math;
 pub mod update;
+pub mod instructions;
+
+use instructions::*;
 
 declare_id!("1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA");
 
 #[program]
 pub mod mm_staking {
     use super::*;
-    // instruction handlers added in later tasks
+
+    pub fn initialize_pool(
+        ctx: Context<InitializePool>,
+        default_duration: i64,
+        keeper_authority: Pubkey,
+    ) -> Result<()> {
+        instructions::initialize_pool::handler(ctx, default_duration, keeper_authority)
+    }
 }
