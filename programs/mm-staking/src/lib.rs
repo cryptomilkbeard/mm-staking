@@ -38,4 +38,8 @@ pub mod mm_staking {
     pub fn unstake(ctx: Context<Unstake>, amount: u64) -> Result<()> {
         instructions::stake::unstake_handler(ctx, amount)
     }
+
+    pub fn deposit_rewards(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
+        instructions::deposit_rewards::handler(ctx, amount)
+    }
 }

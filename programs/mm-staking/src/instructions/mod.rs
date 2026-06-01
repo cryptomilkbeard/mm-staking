@@ -6,3 +6,6 @@ pub use add_reward::*;
 
 pub mod stake;
 pub use stake::*;
+
+pub mod deposit_rewards;
+pub use deposit_rewards::*;
