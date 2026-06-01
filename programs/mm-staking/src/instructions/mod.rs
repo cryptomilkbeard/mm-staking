@@ -1,3 +1,10 @@
+// Each instruction module exports a `handler` fn with the same name — this is
+// the standard Anchor pattern. The glob re-exports are required by the
+// `#[program]` macro's generated __client_accounts_* items. The `handler` name
+// collision is intentional and harmless because lib.rs always calls handlers
+// fully-qualified (e.g. `instructions::claim::handler`).
+#![allow(ambiguous_glob_reexports)]
+
 pub mod initialize_pool;
 pub use initialize_pool::*;
 

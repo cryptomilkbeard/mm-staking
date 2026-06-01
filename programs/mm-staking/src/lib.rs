@@ -1,3 +1,7 @@
+// Anchor 0.31 / Solana macro expansions emit these; not fixable in our code.
+#![allow(unexpected_cfgs)] // cfg(anchor-debug), cfg(solana), custom-panic/custom-heap
+#![allow(deprecated)]      // #[program] expands to AccountInfo::realloc (deprecated upstream)
+
 use anchor_lang::prelude::*;
 
 pub mod constants;

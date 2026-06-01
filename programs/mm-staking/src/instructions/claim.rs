@@ -32,7 +32,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Resul
     }
 
     let remaining = ctx.remaining_accounts;
-    require!(remaining.len() % 2 == 0, StakingError::VaultMismatch);
+    require!(remaining.len().is_multiple_of(2), StakingError::VaultMismatch);
     let seeds: &[&[u8]] = &[POOL_SEED, stake_mint.as_ref(), &[pool_bump]];
 
     for pair in remaining.chunks(2) {
@@ -41,7 +41,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Resul
 
         // resolve slot by vault, read accrued, zero it
         let (amount, vault_key) = {
-            let mut pool = ctx.accounts.pool.load_mut()?;
+            let pool = ctx.accounts.pool.load_mut()?;
             let idx = (0..MAX_REWARDS).find(|&i| pool.rewards[i].vault == *vault_ai.key);
             let idx = idx.ok_or_else(|| error!(StakingError::VaultMismatch))?;
             let mut staker = ctx.accounts.staker.load_mut()?;
