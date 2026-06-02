@@ -91,3 +91,10 @@ export async function getAccount(
   const d = AccountLayout.decode(Buffer.from(acc.data))
   return { amount: d.amount, mint: new PublicKey(d.mint), owner: new PublicKey(d.owner) }
 }
+
+/** Advance the LiteSVM clock by `seconds` without changing slot/epoch. */
+export function warp(svm: any, seconds: number) {
+  const c = svm.getClock()
+  c.unixTimestamp = c.unixTimestamp + BigInt(seconds)
+  svm.setClock(c)
+}
