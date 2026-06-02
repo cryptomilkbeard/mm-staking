@@ -1002,6 +1002,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bytemuck",
+ "solana-security-txt",
 ]
 
 [[package]]

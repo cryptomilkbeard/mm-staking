@@ -23,6 +23,8 @@ anchor-spl = "0.31.1"
 # Required: anchor 0.31.1 `#[zero_copy]` derives `bytemuck::Pod`/`Zeroable` against the
 # `bytemuck` crate path directly, so it must be a direct dependency.
 bytemuck = { version = "1", features = ["derive"] }
+# Embeds a security.txt section in the program binary so explorers show contact/policy.
+solana-security-txt = "1.1.1"
 
 [dev-dependencies]
 # pure math unit tests need nothing extra

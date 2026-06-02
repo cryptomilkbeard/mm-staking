@@ -15,6 +15,19 @@ use instructions::*;
 
 declare_id!("1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA");
 
+#[cfg(not(feature = "no-entrypoint"))]
+use solana_security_txt::security_txt;
+
+#[cfg(not(feature = "no-entrypoint"))]
+security_txt! {
+    name: "MM Single-Sided Staking",
+    project_url: "https://milkbot.org",
+    contacts: "email:hello@milkbot.org",
+    policy: "Report vulnerabilities to hello@milkbot.org. Good-faith disclosure is welcomed and acknowledged; please allow reasonable time to remediate before public disclosure.",
+    preferred_languages: "en",
+    auditors: "Pending (pre-audit)"
+}
+
 #[program]
 pub mod mm_staking {
     use super::*;
