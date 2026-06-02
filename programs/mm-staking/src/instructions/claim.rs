@@ -3,7 +3,6 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::constants::*;
 use crate::errors::StakingError;
 use crate::state::{Pool, StakerAccount};
-use crate::update::update_reward;
 
 #[derive(Accounts)]
 pub struct Claim<'info> {
@@ -28,7 +27,7 @@ pub fn handler<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Resul
     {
         let mut pool = ctx.accounts.pool.load_mut()?;
         let mut staker = ctx.accounts.staker.load_mut()?;
-        update_reward(&mut pool, Some(&mut staker), now)?;
+        crate::logic::claim_settle_all(&mut pool, &mut staker, now)?;
     }
 
     let remaining = ctx.remaining_accounts;
@@ -41,12 +40,9 @@ pub fn handler<'info>(ctx: Context<'_, '_, 'info, 'info, Claim<'info>>) -> Resul
 
         // resolve slot by vault, read accrued, zero it
         let (amount, vault_key) = {
-            let pool = ctx.accounts.pool.load_mut()?;
-            let idx = (0..MAX_REWARDS).find(|&i| pool.rewards[i].vault == *vault_ai.key);
-            let idx = idx.ok_or_else(|| error!(StakingError::VaultMismatch))?;
+            let pool = ctx.accounts.pool.load()?;
             let mut staker = ctx.accounts.staker.load_mut()?;
-            let amt = staker.entries[idx].rewards_accrued;
-            staker.entries[idx].rewards_accrued = 0;
+            let (idx, amt) = crate::logic::claim_take_slot(&pool, &mut staker, vault_ai.key)?;
             (amt, pool.rewards[idx].vault)
         };
         if amount == 0 {

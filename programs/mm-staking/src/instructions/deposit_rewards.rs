@@ -2,9 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::constants::*;
 use crate::errors::StakingError;
-use crate::math::notify_rate;
 use crate::state::Pool;
-use crate::update::{find_slot, update_reward};
+use crate::update::find_slot;
 
 #[derive(Accounts)]
 pub struct DepositRewards<'info> {
@@ -52,15 +51,5 @@ pub fn handler(ctx: Context<DepositRewards>, amount: u64) -> Result<()> {
     let received = ctx.accounts.reward_vault.amount.checked_sub(before).ok_or_else(|| error!(StakingError::MathOverflow))?;
 
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let i = find_slot(&pool, &mint).ok_or_else(|| error!(StakingError::RewardNotFound))?;
-    require!(pool.rewards[i].active == 1, StakingError::RewardInactive);
-
-    // settle globals to now, then re-rate
-    update_reward(&mut pool, None, now)?;
-    let duration = pool.rewards[i].duration;
-    let new_rate = notify_rate(received, pool.rewards[i].reward_rate, now, pool.rewards[i].period_finish, duration)?;
-    pool.rewards[i].reward_rate = new_rate;
-    pool.rewards[i].last_update_time = now;
-    pool.rewards[i].period_finish = now.checked_add(duration).ok_or_else(|| error!(StakingError::MathOverflow))?;
-    Ok(())
+    crate::logic::deposit_rewards(&mut pool, mint, received, now)
 }

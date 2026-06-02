@@ -9,6 +9,7 @@ pub mod errors;
 pub mod state;
 pub mod math;
 pub mod update;
+pub mod logic;
 pub mod instructions;
 
 use instructions::*;
@@ -21,7 +22,7 @@ use solana_security_txt::security_txt;
 #[cfg(not(feature = "no-entrypoint"))]
 security_txt! {
     name: "MM Single-Sided Staking",
-    project_url: "https://milkbot.org",
+    project_url: "https://dash.milkbot.org",
     contacts: "email:hello@milkbot.org",
     policy: "Report vulnerabilities to hello@milkbot.org. Good-faith disclosure is welcomed and acknowledged; please allow reasonable time to remediate before public disclosure.",
     preferred_languages: "en",

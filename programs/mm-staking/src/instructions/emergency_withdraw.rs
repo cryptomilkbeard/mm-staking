@@ -35,15 +35,7 @@ pub fn handler(ctx: Context<EmergencyWithdraw>) -> Result<()> {
     let amount = {
         let mut pool = ctx.accounts.pool.load_mut()?;
         let mut staker = ctx.accounts.staker.load_mut()?;
-        let amt = staker.staked_amount;
-        staker.staked_amount = 0;
-        pool.total_staked = pool.total_staked.saturating_sub(amt);
-        // forfeit unclaimed rewards
-        for i in 0..MAX_REWARDS {
-            staker.entries[i].rewards_accrued = 0;
-            staker.entries[i].reward_per_token_paid = pool.rewards[i].reward_per_token_stored;
-        }
-        amt
+        crate::logic::emergency_withdraw(&mut pool, &mut staker)?
     };
     require!(amount > 0, StakingError::ZeroAmount);
     let seeds: &[&[u8]] = &[POOL_SEED, stake_mint.as_ref(), &[pool_bump]];

@@ -3,7 +3,6 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::constants::*;
 use crate::errors::StakingError;
 use crate::state::{Pool, StakerAccount};
-use crate::update::update_reward;
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
@@ -36,10 +35,18 @@ pub struct Stake<'info> {
 }
 
 pub fn stake_handler(ctx: Context<Stake>, amount: u64) -> Result<()> {
+    // `amount > 0` MUST be checked before the init_if_needed staker dance so a
+    // zero-amount call does not initialize the staker PDA (behavior preserved).
     require!(amount > 0, StakingError::ZeroAmount);
     let now = Clock::get()?.unix_timestamp;
+    let owner = ctx.accounts.owner.key();
+    let pool_key = ctx.accounts.pool.key();
+    let staker_bump = ctx.bumps.staker;
     {
         let mut pool = ctx.accounts.pool.load_mut()?;
+        // `paused` MUST be checked before the init_if_needed staker dance so a
+        // paused-pool stake does not initialize the staker PDA (behavior
+        // preserved). `logic::stake` re-checks it (redundant but self-contained).
         require!(pool.paused == 0, StakingError::Paused);
 
         // init staker fields on first use
@@ -47,20 +54,15 @@ pub fn stake_handler(ctx: Context<Stake>, amount: u64) -> Result<()> {
             Ok(s) => s,
             Err(_) => ctx.accounts.staker.load_init()?,
         };
-        if staker.owner == Pubkey::default() {
-            staker.owner = ctx.accounts.owner.key();
-            staker.pool = ctx.accounts.pool.key();
-            staker.bump = ctx.bumps.staker;
-        }
-        update_reward(&mut pool, Some(&mut staker), now)?;
-        staker.staked_amount = staker
-            .staked_amount
-            .checked_add(amount)
-            .ok_or_else(|| error!(StakingError::MathOverflow))?;
-        pool.total_staked = pool
-            .total_staked
-            .checked_add(amount)
-            .ok_or_else(|| error!(StakingError::MathOverflow))?;
+        crate::logic::stake(
+            &mut pool,
+            &mut staker,
+            owner,
+            pool_key,
+            staker_bump,
+            amount,
+            now,
+        )?;
     }
     token::transfer(
         CpiContext::new(
@@ -103,7 +105,6 @@ pub struct Unstake<'info> {
 }
 
 pub fn unstake_handler(ctx: Context<Unstake>, amount: u64) -> Result<()> {
-    require!(amount > 0, StakingError::ZeroAmount);
     let now = Clock::get()?.unix_timestamp;
     let stake_mint = ctx.accounts.stake_mint.key();
     let pool_bump = ctx.accounts.pool.load()?.bump;
@@ -111,10 +112,7 @@ pub fn unstake_handler(ctx: Context<Unstake>, amount: u64) -> Result<()> {
         let mut pool = ctx.accounts.pool.load_mut()?;
         // unstake is allowed even when paused (principal must stay exitable)
         let mut staker = ctx.accounts.staker.load_mut()?;
-        require!(staker.staked_amount >= amount, StakingError::InsufficientStake);
-        update_reward(&mut pool, Some(&mut staker), now)?;
-        staker.staked_amount -= amount;
-        pool.total_staked -= amount;
+        crate::logic::unstake(&mut pool, &mut staker, amount, now)?;
     }
     let seeds: &[&[u8]] = &[POOL_SEED, stake_mint.as_ref(), &[pool_bump]];
     token::transfer(

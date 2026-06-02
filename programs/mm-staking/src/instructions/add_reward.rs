@@ -3,7 +3,6 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use crate::constants::*;
 use crate::errors::StakingError;
 use crate::state::Pool;
-use crate::update::find_slot;
 
 #[derive(Accounts)]
 pub struct AddReward<'info> {
@@ -31,24 +30,11 @@ pub struct AddReward<'info> {
 }
 
 pub fn handler(ctx: Context<AddReward>, duration: i64) -> Result<()> {
-    let mut pool = ctx.accounts.pool.load_mut()?;
+    let now = Clock::get()?.unix_timestamp;
     let mint = ctx.accounts.reward_mint.key();
-    require!(find_slot(&pool, &mint).is_none(), StakingError::RewardAlreadyExists);
-    let duration = if duration > 0 { duration } else { pool.default_duration };
-
-    let free = (0..MAX_REWARDS).find(|&i| pool.rewards[i].mint == Pubkey::default());
-    let idx = free.ok_or_else(|| error!(StakingError::RewardSlotsFull))?;
-
-    pool.rewards[idx].mint = mint;
-    pool.rewards[idx].vault = ctx.accounts.reward_vault.key();
-    pool.rewards[idx].reward_rate = 0;
-    pool.rewards[idx].reward_per_token_stored = 0;
-    pool.rewards[idx].period_finish = 0;
-    pool.rewards[idx].last_update_time = Clock::get()?.unix_timestamp;
-    pool.rewards[idx].duration = duration;
-    pool.rewards[idx].active = 1;
-    pool.reward_count = pool.reward_count.checked_add(1).ok_or_else(|| error!(StakingError::MathOverflow))?;
-    Ok(())
+    let vault = ctx.accounts.reward_vault.key();
+    let mut pool = ctx.accounts.pool.load_mut()?;
+    crate::logic::add_reward(&mut pool, mint, vault, duration, now)
 }
 
 #[derive(Accounts)]
@@ -61,8 +47,5 @@ pub struct SetRewardActive<'info> {
 
 pub fn set_active_handler(ctx: Context<SetRewardActive>, slot: u8, active: bool) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_mut()?;
-    let i = slot as usize;
-    require!(i < MAX_REWARDS && pool.rewards[i].mint != Pubkey::default(), StakingError::RewardNotFound);
-    pool.rewards[i].active = if active { 1 } else { 0 };
-    Ok(())
+    crate::logic::set_reward_active(&mut pool, slot, active)
 }
