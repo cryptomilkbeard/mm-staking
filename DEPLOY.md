@@ -57,10 +57,44 @@ explorer.solana.com (mainnet) before announcing.
 
 ## Verifiable build (solana-verify)
 
-1. `cargo install solana-verify`
-2. `solana-verify build` (reproducible container build)
-3. After mainnet deploy: `solana-verify verify-from-repo <REPO_URL> --program-id <PROGRAM_ID>`
-4. Submit verification (e.g. to the OtterSec API per solana-verify docs) so explorers show "verified".
+Public repo: https://github.com/cryptomilkbeard/mm-staking (branch `main`).
+
+**Toolchain pin (REQUIRED):** this program depends on crates needing `edition2024` (rustc ≥1.85),
+but Anchor 0.31.1's default tools are too old. The reproducible build MUST use the
+`solanafoundation/solana-verifiable-build:3.1.14` base image (platform-tools v1.52 / rustc 1.89) —
+the same tools `build.sh` forces. Other base images fail with `feature edition2024 is required`.
+
+Needs Docker. Install: `cargo install solana-verify`.
+
+1. **Reproducible build** (must match the deployed bytecode):
+   ```
+   solana-verify build --library-name mm_staking \
+     --base-image solanafoundation/solana-verifiable-build:3.1.14
+   solana-verify get-executable-hash target/deploy/mm_staking.so
+   ```
+2. **Deploy that exact .so** so the on-chain hash equals the reproducible-build hash. Confirm:
+   ```
+   solana-verify get-program-hash -u <CLUSTER> <PROGRAM_ID>   # must equal step 1's hash
+   ```
+3. **Upload the on-chain verify PDA** (signed by the upgrade authority — on mainnet that's the
+   Squads multisig, so use the multisig flow):
+   ```
+   solana-verify verify-from-repo https://github.com/cryptomilkbeard/mm-staking \
+     --program-id <PROGRAM_ID> --library-name mm_staking \
+     --base-image solanafoundation/solana-verifiable-build:3.1.14 \
+     --commit-hash <COMMIT> -u <CLUSTER> -k <UPGRADE_AUTHORITY> --skip-prompt
+   ```
+   This rebuilds from the repo, asserts the hash matches on-chain, and writes the otter-verify PDA.
+4. **Queue the OtterSec registry** (this is what flips explorer.solana.com's "Verified" badge —
+   **MAINNET ONLY**; the remote service rejects devnet/testnet):
+   ```
+   solana-verify remote submit-job --program-id <PROGRAM_ID> --uploader <UPGRADE_AUTHORITY>
+   ```
+
+**Devnet status (done 2026-06-02):** on-chain verify PDA written; reproducible build hash
+`2836032f6bded5be9ecb8e013d8e83ffd852f025644fd300d16e70d7b35dfefd` matches the deployed program. The
+remote registry badge is mainnet-only, so the devnet explorer badge may not render — the on-chain
+verification is still real and recorded.
 
 ## Upgrade authority end state
 
