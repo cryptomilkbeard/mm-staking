@@ -6,7 +6,7 @@ distributed pro-rata using the Synthetix `StakingRewards` streaming model.
 
 - **Program ID:** `1Zx9vyjZLMJqsFyZxraPBww4SrSPXwHt7HFbtwpfCmA`
 - **Framework:** Anchor 0.31 (Rust), `#[zero_copy]` accounts
-- **Security contact:** hello@milkbot.org · https://milkbot.org
+- **Security contact:** hello@milkbot.org · https://dash.milkbot.org
 
 ## How it works
 
