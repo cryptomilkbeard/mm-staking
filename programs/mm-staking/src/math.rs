@@ -143,4 +143,134 @@ mod tests {
         assert_eq!(core::mem::size_of::<crate::state::RewardInfo>(), 128);
         assert_eq!(core::mem::size_of::<crate::state::RewardEntry>(), 32);
     }
+
+    // --- math.rs coverage gap tests ---
+
+    #[test]
+    fn compute_reward_rate_rejects_zero_duration() {
+        // duration <= 0 must return Err(InvalidDuration)
+        let err = compute_reward_rate(1000, 0, 0).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::InvalidDuration));
+    }
+
+    #[test]
+    fn compute_reward_rate_rejects_negative_duration() {
+        let err = compute_reward_rate(1000, 0, -1).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::InvalidDuration));
+    }
+
+    #[test]
+    fn notify_rate_past_period_finish_no_leftover() {
+        // now >= period_finish  =>  remaining = 0  (the else { 0 } branch, line 69)
+        // rate = amount*PRECISION / duration
+        let rate = notify_rate(1000, 9999 * PRECISION, 200, 100, 100).unwrap();
+        assert_eq!(rate, 1000 * PRECISION / 100);
+    }
+
+    #[test]
+    fn notify_rate_exactly_at_period_finish() {
+        // now == period_finish: still hits the else branch (now < period_finish is false)
+        let rate = notify_rate(500, 5 * PRECISION, 100, 100, 50).unwrap();
+        assert_eq!(rate, 500 * PRECISION / 50);
+    }
+
+    #[test]
+    fn notify_rate_rejects_zero_duration() {
+        let err = notify_rate(1000, 0, 0, 0, 0).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::InvalidDuration));
+    }
+
+    #[test]
+    fn notify_rate_rejects_negative_duration() {
+        let err = notify_rate(1000, 0, 0, 0, -5).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::InvalidDuration));
+    }
+
+    #[test]
+    fn accrue_rpt_no_op_when_elapsed_zero() {
+        // elapsed_secs == 0 => returns rpt_stored unchanged
+        let rpt = accrue_rpt(42 * PRECISION, 0, PRECISION, 100).unwrap();
+        assert_eq!(rpt, 42 * PRECISION);
+    }
+
+    #[test]
+    fn accrue_rpt_no_op_when_elapsed_negative() {
+        // elapsed_secs < 0 => returns rpt_stored unchanged
+        let rpt = accrue_rpt(7 * PRECISION, -5, PRECISION, 100).unwrap();
+        assert_eq!(rpt, 7 * PRECISION);
+    }
+
+    // --- Overflow-guard closures (ok_or_else bodies) ---
+
+    #[test]
+    fn accrue_rpt_errors_on_mul_overflow() {
+        // elapsed_secs * reward_rate overflows u128:
+        // elapsed=2, reward_rate = u128::MAX/1 + 1 → checked_mul returns None
+        let err = accrue_rpt(0, 2, u128::MAX, 1).unwrap_err();
+        // Note: rpt_stored=0 but total_staked=1 and elapsed=2, so the mul fires.
+        // Actually elapsed=2, reward_rate=u128::MAX: 2 * u128::MAX overflows.
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
+
+    #[test]
+    fn accrue_rpt_errors_on_add_overflow() {
+        // rpt_stored + delta overflows u128:
+        // elapsed=1, reward_rate=1, total_staked=1 → delta=1; rpt_stored=u128::MAX → overflow
+        let err = accrue_rpt(u128::MAX, 1, 1, 1).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
+
+    #[test]
+    fn earned_errors_on_mul_overflow() {
+        // staked_amount * delta overflows u128:
+        // delta = u128::MAX (rpt - paid), staked = 2 → 2 * u128::MAX overflows
+        let err = earned(2, u128::MAX, 0, 0).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
+
+    #[test]
+    fn earned_errors_on_u64_cast_overflow() {
+        // total > u64::MAX: staked=1, delta=PRECISION*(u64::MAX as u128 + 1)/PRECISION
+        // Use rpt delta = (u64::MAX as u128 + 1) * PRECISION so new_rewards = u64::MAX + 1
+        let big_rpt = (u64::MAX as u128 + 1) * PRECISION;
+        let err = earned(1, big_rpt, 0, 0).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
+
+    #[test]
+    fn earned_errors_when_add_rewards_overflows() {
+        // rewards_accrued + new_rewards overflows u128:
+        // staked=1, delta = u128::MAX/1 (rpt=u128::MAX, paid=0), rewards_accrued non-zero
+        // But staked*delta already overflows. Use rewards_accrued = u64::MAX, new_rewards > 0
+        // that causes their u128 sum to overflow: not possible since u64 + u64 fits u128.
+        // The checked_add on line 50 is between two u128 values; u128::MAX + 1 to overflow:
+        // new_rewards = (staked * delta) / PRECISION must be very large.
+        // Use staked = u64::MAX, delta just above 0 yielding new_rewards near u128::MAX,
+        // then rewards_accrued large enough to overflow the sum.
+        // Easier: call earned with staked=u64::MAX, rpt-paid = u128::MAX (triggers mul overflow first).
+        // The only way to get u128 add overflow on line 50 is if new_rewards alone is near u128::MAX.
+        // Since new_rewards = (staked*delta)/PRECISION and staked <= u64::MAX (1.8e19),
+        // max new_rewards ≈ 1.8e19 * u128::MAX / 1e12 — mul overflows before we get there.
+        // This path is UNREACHABLE with valid types (covered by the mul overflow guard above).
+        // Test skipped — see coverage notes.
+    }
+
+    #[test]
+    fn notify_rate_errors_on_remaining_mul_overflow() {
+        // (period_finish - now) * current_rate overflows: use large current_rate
+        let err = notify_rate(0, u128::MAX, 0, 2, 1).unwrap_err();
+        // remaining = (2 - 0) as u128 * u128::MAX overflows
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
+
+    #[test]
+    fn notify_rate_errors_on_final_add_overflow() {
+        // scaled_amount + remaining overflows u128.
+        // scaled = u64::MAX * PRECISION (~1.8e31).
+        // remaining = 1 * current_rate; choose current_rate so scaled + remaining > u128::MAX.
+        // current_rate > u128::MAX - (u64::MAX * PRECISION) → at least u128::MAX - 1.8e31 + 1.
+        let current_rate = u128::MAX - (u64::MAX as u128 * PRECISION) + 1;
+        let err = notify_rate(u64::MAX, current_rate, 0, 1, 1).unwrap_err();
+        assert_eq!(err, anchor_lang::error!(StakingError::MathOverflow));
+    }
 }

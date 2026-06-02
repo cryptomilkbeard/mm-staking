@@ -1,0 +1,64 @@
+info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage
+   Compiling mm-staking v0.1.0 (/home/ubuntu/mm-staking/programs/mm-staking)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.61s
+     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/mm_staking-d1e7c0a04f4c1d54)
+
+running 41 tests
+test math::tests::accrue_rpt_errors_on_mul_overflow ... ok
+test math::tests::accrue_rpt_errors_on_add_overflow ... ok
+test math::tests::accrue_rpt_no_op_when_elapsed_negative ... ok
+test math::tests::compute_reward_rate_rejects_negative_duration ... ok
+test math::tests::compute_reward_rate_rejects_zero_duration ... ok
+test math::tests::earned_errors_on_mul_overflow ... ok
+test math::tests::accrue_rpt_no_op_when_elapsed_zero ... ok
+test math::tests::earned_errors_on_u64_cast_overflow ... ok
+test math::tests::earned_errors_when_add_rewards_overflows ... ok
+test math::tests::earned_rounds_down_toward_vault ... ok
+test math::tests::earned_includes_accrued_buffer ... ok
+test math::tests::notify_folds_leftover ... ok
+test math::tests::notify_fresh_period_sets_rate ... ok
+test math::tests::notify_rate_errors_on_final_add_overflow ... ok
+test math::tests::notify_rate_errors_on_remaining_mul_overflow ... ok
+test math::tests::notify_rate_exactly_at_period_finish ... ok
+test math::tests::notify_rate_past_period_finish_no_leftover ... ok
+test math::tests::notify_rate_rejects_negative_duration ... ok
+test math::tests::notify_rate_rejects_zero_duration ... ok
+test math::tests::rate_is_scaled_amount_over_duration ... ok
+test math::tests::rpt_accrues_pro_rata ... ok
+test math::tests::rpt_does_not_advance_with_zero_stake ... ok
+test math::tests::struct_sizes_are_stable ... ok
+test test_id ... ok
+test update::tests::find_slot_returns_index_for_registered_mint ... ok
+test update::tests::find_slot_returns_none_for_unregistered_mint ... ok
+test update::tests::find_slot_returns_none_on_empty_pool ... ok
+test update::tests::settle_advances_rpt_when_total_staked_positive ... ok
+test update::tests::settle_caps_applicable_at_period_finish ... ok
+test update::tests::settle_extends_period_finish_on_zero_stake ... ok
+test update::tests::settle_no_op_when_applicable_lte_last_update_time ... ok
+test update::tests::settle_slot_period_finish_overflow_propagates ... ok
+test update::tests::settle_slot_propagates_accrue_rpt_overflow_error ... ok
+test update::tests::settle_zero_stake_no_roll_when_last_update_gte_now ... ok
+test update::tests::settle_zero_stake_no_roll_when_past_period_finish ... ok
+test update::tests::update_reward_no_staker_is_ok ... ok
+test update::tests::update_reward_skips_empty_slots_for_staker ... ok
+test update::tests::update_reward_skips_empty_slots_global ... ok
+test update::tests::update_reward_with_staker_accrues_entries ... ok
+test update::tests::update_reward_with_staker_accumulates_accrued ... ok
+test update::tests::update_reward_with_staker_propagates_earned_error ... ok
+
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Filename                               Regions    Missed Regions     Cover   Functions  Missed Functions  Executed       Lines      Missed Lines     Cover    Branches   Missed Branches     Cover
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+instructions/add_reward.rs                  67                67     0.00%           7                 7     0.00%          30                30     0.00%           0                 0         -
+instructions/admin.rs                       41                41     0.00%           5                 5     0.00%          21                21     0.00%           0                 0         -
+instructions/claim.rs                      110               110     0.00%           4                 4     0.00%          45                45     0.00%           0                 0         -
+instructions/deposit_rewards.rs             92                92     0.00%           7                 7     0.00%          38                38     0.00%           0                 0         -
+instructions/emergency_withdraw.rs          49                49     0.00%           2                 2     0.00%          28                28     0.00%           0                 0         -
+instructions/initialize_pool.rs             23                23     0.00%           2                 2     0.00%          15                15     0.00%           0                 0         -
+instructions/stake.rs                      110               110     0.00%           6                 6     0.00%          59                59     0.00%           0                 0         -
+lib.rs                                      63                62     1.59%          14                13     7.14%          42                41     2.38%           0                 0         -
+math.rs                                    285                 8    97.19%          42                 3    92.86%         173                 3    98.27%           0                 0         -
+update.rs                                  329                 0   100.00%          24                 0   100.00%         229                 0   100.00%           0                 0         -
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                     1169               562    51.92%         113                49    56.64%         680               280    58.82%           0                 0         -
